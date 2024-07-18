@@ -10,7 +10,7 @@ function App() {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         const token = await getToken(messaging, {
-          vapidKey: "BI4QhL1rkwZqDufE82fiT2ZT2FJOmatw22vUeR7RbU7dkg20BuyNeot-9t8cq0rJpG7L_WO27LN9AKn3yYvlQwc",
+          vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY,
         });
         console.log("Token Gen", token);
         // Send this token to the server (database)
