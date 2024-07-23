@@ -13,13 +13,26 @@ function App() {
           vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY,
         });
         console.log("Token Gen", token);
-        // Send this token to the server (database)
+        sendDataToServer(token);
       } else if (permission === "denied") {
         alert("You denied the notification");
       }
     } catch (error) {
       console.error("An error occurred while retrieving token. ", error);
     }
+  }
+
+  function sendDataToServer(token) {
+    fetch('http://localhost:3000/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: token }),
+    })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error('Error:', error));
   }
 
   useEffect(() => {
