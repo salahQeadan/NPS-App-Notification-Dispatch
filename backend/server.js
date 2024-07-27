@@ -1,32 +1,46 @@
 const http = require('http');
-const { URL } = require('url');
+const admin = require('./firebaseAdmin');
+//
+const { sendEmails } = require('./notification');
+//
+const hostname = '127.0.0.1';
+const port = 3000;
 
 const server = http.createServer((req, res) => {
-  const reqUrl = new URL(req.url, `http://${req.headers.host}`);
-
-  if (req.method === 'POST' && reqUrl.pathname === '/api/token') {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      try {
-        const jsonData = JSON.parse(body);
-        console.log('Token received:', jsonData.token);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Token received successfully' }));
-      } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Invalid JSON' }));
-      }
-    });
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
-  }
+  if (req.url === '/addUser' && req.method === 'GET') {
+    const db = admin.firestore();
+    db.collection('users').add({
+      name: 'Majd Shadafny',
+      email: 'majodeshadafny@gmail.com'
+    }).then(docRef => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ message: 'Document written with ID: ' + docRef.id }));
+}).catch(error => {
+  res.statusCode = 500;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ error: 'Error adding document: ' + error }));
 });
 
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+//
+} else if (req.url === '/send-emails' && req.method === 'GET') {
+  sendEmails().then(() => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ message: 'Emails sent successfully!' }));
+  }).catch(error => {
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: 'Error sending emails: ' + error }));
+  });
+  //
+} else {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello World\n');
+}
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
 });

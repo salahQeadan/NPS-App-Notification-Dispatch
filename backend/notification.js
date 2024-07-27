@@ -1,5 +1,7 @@
 require('dotenv').config();
 const twilio = require('twilio');
+const { MongoClient } = require('mongodb');
+const nodemailer = require('nodemailer');
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -74,8 +76,58 @@ const makeVoiceCalls = (recipients) => {
     });
 };
 
+// Function to send emails to a list emails
+const sendEmails = async () => {
+  const url = process.env.MONGO_URL;
+  const dbName = 'customers';
+  const client = new MongoClient(url);
+
+  try {
+      await client.connect();
+      console.log('Connected to MongoDB');
+      const db = client.db(dbName);
+      const collection = db.collection('emaildata');
+
+      const customers = await collection.find({}).toArray();
+      console.log('Customers:', customers);
+
+      const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS,
+          },
+      });
+      for (const customer of customers) {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: customer.email,
+            subject: 'رسالة ترحيب',
+            text: `مرحبًا ${customer.name}, شكراً لتسجيلك معنا!`,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Email sent to ${customer.email}`);
+    }
+} catch (error) {
+    console.error('Error:', error);
+} finally {
+    await client.close();
+}
+};
+
+sendEmails();
+
 sendSMSMessages(smsRecipients);
 
 sendWhatsAppMessages(whatsappRecipients);
 
 makeVoiceCalls(voiceRecipients);
+
+// Export the functions
+module.exports = {
+  sendSMSMessages,
+  sendWhatsAppMessages,
+  makeVoiceCalls,
+  sendEmails,
+};
