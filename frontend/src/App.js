@@ -23,7 +23,7 @@ function App() {
   }
 
   function sendDataToServer(token) {
-    fetch('http://localhost:3000/api/token', {
+    fetch('http://localhost:3000/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -2,3 +2,4 @@ node_modules
 .env
 backend/notification-1dc26-firebase-adminsdk-swe90-6bbb00fa62.json
 backend/.env
+frontend/.env
